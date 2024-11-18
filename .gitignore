@@ -1,3 +1,2 @@
-./domain.txt
-./input.txt
-./output.txt
+*.txt
+./*.txt

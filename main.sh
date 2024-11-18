@@ -3,6 +3,7 @@
 # Set Default Value
 input_file="input.txt"
 output_file="output.txt"
+available_file="available.txt"
 domain_suffix=""
 non_domain=false
 sleep_time=5
@@ -13,6 +14,7 @@ show_help() {
     echo "Options:"
     echo "  -i, --input FILE     Input file (default: input.txt)"
     echo "  -o, --output FILE    Output file (default: output.txt)"
+    echo "  -a, --available FILE    Available file (default: available.txt)"
     echo "  -s, --sleep TIME    Sleep time between checks in seconds (default: 5)"
     echo "  -N, --non-domain SUFFIX  Add suffix to domains (e.g., .com, .net)"
     echo "  -h, --help          Show this help message"
@@ -32,6 +34,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -o|--output)
             output_file="$2"
+            shift 2
+            ;;
+        -a|--available)
+            available_file="$2"
             shift 2
             ;;
         -s|--sleep)
@@ -65,8 +71,9 @@ if [ ! -f "$input_file" ]; then
     exit 1
 fi
 
-# Delete Output File
+# Delete Output File / Available file
 > "$output_file"
+> "$available_file"
 
 # Validation Domain Checker (Main Function)
 check_domain() {
@@ -84,6 +91,7 @@ check_domain() {
     
     if echo "$whois_result" | grep -iE "No match|NOT FOUND|No entries found|Domain not found|Status: AVAILABLE|Status: free" > /dev/null; then
         echo "Available: $domain" >> "$output_file"
+        echo "$domain" >> "$available_file"
         echo -e " \e[32m[Available ✓]\e[0m"
     else
         echo "Taken: $domain" >> "$output_file"
@@ -97,6 +105,7 @@ check_domain() {
 echo "Starting domain check..."
 echo "Input file: $input_file"
 echo "Output file: $output_file"
+echo "Available file: $available_file"
 if [ "$non_domain" = true ]; then
     echo "Adding suffix: $domain_suffix to all domains"
 fi
@@ -127,4 +136,5 @@ echo "----------------------------------------"
 echo "Total domains checked: $(wc -l < "$input_file")"
 echo "Available domains: $(grep -c "Available:" "$output_file")"
 echo "Taken domains: $(grep -c "Taken:" "$output_file")"
-echo "Results saved in: $output_file"
+echo "Results All saved in: $output_file"
+echo "Available saved in: $available_file"
