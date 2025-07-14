@@ -195,11 +195,14 @@ while IFS= read -r domain || [[ -n "$domain" ]]; do
     ((total_domains++))
 done < "$input_file"
 
+avg_request_whois_seconds=3
+estimated_time_1=$(echo "$total_domains * $sleep_time" | bc)  # Sleep Time
+estimated_time_2=$(echo "$total_domains * $avg_request_whois_seconds" | bc)  # Average request whois
 if command -v bc &> /dev/null; then
-    estimated_time=$(echo "$total_domains * $sleep_time" | bc)
+    estimated_time=$(echo "$estimated_time_1 + $estimated_time_2" | bc)
     estimated_minutes=$(echo "scale=1; $estimated_time / 60" | bc)
 else
-    estimated_time=$((total_domains * sleep_time))
+    estimated_time=$((estimated_time_1 + estimated_time_2))
     estimated_minutes=$((estimated_time / 60))
 fi
 
@@ -216,6 +219,7 @@ echo -e "╚══════════════════════�
 # Main Loop with better progress tracking
 current=0
 start_time=$(date +%s)
+remaining_time=$estimated_time
 
 while IFS= read -r domain || [[ -n "$domain" ]]; do
     # Clean domain name
@@ -226,21 +230,14 @@ while IFS= read -r domain || [[ -n "$domain" ]]; do
 
     ((current++))
     progress=$((current * 100 / total_domains))
-    remaining=$((total_domains - current))
 
     # Calculate ETA
-    current_time=$(date +%s)
-    elapsed=$((current_time - start_time))
-    if [ $current -gt 0 ]; then
-        avg_time_per_domain=$((elapsed / current))
-        eta=$((remaining * avg_time_per_domain))
-        eta_formatted=$(printf "%02d:%02d" $((eta/60)) $((eta%60)))
-    else
-        eta_formatted="--:--"
-    fi
+    eta_formatted=$(printf "%02d:%02d" $((remaining_time / 60)) $((remaining_time % 60)))
 
     echo -ne "${blue}[$current/$total_domains] ${yellow}${progress}%${blue} ETA: ${yellow}${eta_formatted}${reset} "
     check_domain "$domain"
+
+    remaining_time=$((remaining_time - sleep_time - avg_request_whois_seconds))
 done < "$input_file"
 
 # Close JSON properly
