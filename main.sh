@@ -24,7 +24,8 @@ blue='\e[34m'
 reset='\e[0m'
 
 # Notification sound
-sound_file="ding.wav"
+sound_file="ding.mp3"
+turn_sound=true
 
 # Create directories for organized output
 create_directories() {
@@ -45,18 +46,19 @@ show_help() {
     echo -e "${green}\nDomain Checker Script"
     echo -e "Usage: $0 [OPTIONS]"
     echo "Options:"
-    echo "  -i, --input FILE       Input file (default: input.txt)"
-    echo "  -o, --output FILE      Output file (default: output_TIMESTAMP.txt)"
-    echo "  -a, --available FILE   Available file (default: available_TIMESTAMP.txt)"
-    echo "  -t, --taken FILE       Taken file (default: taken_TIMESTAMP.txt)"
-    echo "  -j, --json FILE        JSON output file (optional)"
-    echo "  -s, --sleep TIME       Sleep time in seconds (default: 5)"
-    echo "  -N, --non-domain SUFFIX   Add suffix (e.g. .com, .net)"
-    echo "  -p, --prefix VALUE     Add prefix (e.g. www.)"
-    echo "  --fast                 Fast mode (no sleep)"
-    echo "  --debug                Save raw whois logs"
-    echo "  --interactive          Ask before saving available domain"
-    echo "  -h, --help             Show this help message"
+    echo "  -i, --input FILE            Input file (default: input.txt)"
+    echo "  -o, --output FILE           Output file (default: output_TIMESTAMP.txt)"
+    echo "  -a, --available FILE        Available file (default: available_TIMESTAMP.txt)"
+    echo "  -t, --taken FILE            Taken file (default: taken_TIMESTAMP.txt)"
+    echo "  -j, --json FILE             JSON output file (optional)"
+    echo "  -s, --sleep TIME            Sleep time in seconds (default: 5)"
+    echo "  -N, --non-domain SUFFIX     Add suffix (e.g. .com, .net)"
+    echo "  -p, --prefix VALUE          Add prefix (e.g. www.)"
+    echo "  --fast                      Fast mode (no sleep)"
+    echo "  --debug                     Save raw whois logs"
+    echo "  --interactive               Ask before saving available domain"
+    echo "  --off-song                  Turn off notification"
+    echo "  -h, --help                  Show this help message"
     echo ""
     echo "Files will be organized in subdirectories:"
     echo "  - results/    : Main output files"
@@ -83,6 +85,7 @@ while [[ $# -gt 0 ]]; do
         --fast) fast_mode=true; sleep_time=0; shift;;
         --debug) debug_mode=true; shift;;
         --interactive) interactive_mode=true; shift;;
+        --off-song) turn_sound=false; shift;;
         -h|--help) show_help; exit 0;;
         *) echo -e "${red}Unknown option: $1${reset}"; show_help; exit 1;;
     esac
@@ -167,8 +170,10 @@ check_domain() {
         fi
 
         # Play sound if available
-        if [ -f "$sound_file" ] && command -v aplay >/dev/null 2>&1; then
-            aplay "$sound_file" 2>/dev/null &
+        if [ "$turn_sound" = true ]; then
+          if [ -f "$sound_file" ] && command -v ffplay >/dev/null 2>&1; then
+              ffplay -nodisp -autoexit -loglevel quiet "$sound_file" >/dev/null 2>&1 &
+          fi
         fi
     else
         echo "Taken: $full_domain" >> "$output_file"
