@@ -12,6 +12,7 @@ domain_suffix=""
 non_domain=false
 fast_mode=false
 debug_mode=false
+no_save_mode=false
 interactive_mode=false
 prefix=""
 
@@ -56,10 +57,11 @@ show_help() {
     echo "  -N, --non-domain SUFFIX     Add suffix (e.g. .com, .net)"
     echo "  -p, --prefix VALUE          Add prefix (e.g. www.)"
     echo "  --fast                      Fast mode (no sleep)"
+    echo "  --no-save                   Do not save any output files"
     echo "  --debug                     Save raw whois logs"
     echo "  --interactive               Ask before saving available domain"
-    echo "  --song                      Turn on the sound"
-    echo "  --notification              Turn on the notification"
+    echo "  --sound                     Turn on the sound"
+    echo "  --notify                    Turn on the notification"
     echo "  -h, --help                  Show this help message"
     echo ""
     echo "Files will be organized in subdirectories:"
@@ -86,9 +88,10 @@ while [[ $# -gt 0 ]]; do
         -p|--prefix) prefix="$2"; shift 2;;
         --fast) fast_mode=true; sleep_time=0; shift;;
         --debug) debug_mode=true; shift;;
+        --no-save) no_save_mode=true; debug_mode=false; json_file="/dev/null"; available_file="/dev/null"; taken_file="/dev/null"; output_file="/dev/null"; shift;;
         --interactive) interactive_mode=true; shift;;
-        --song) turn_sound=true; shift;;
-        --notification) turn_notification=true; shift;;
+        --sound) turn_sound=true; shift;;
+        --notify) turn_notification=true; shift;;
         -h|--help) show_help; exit 0;;
         *) echo -e "${red}Unknown option: $1${reset}"; show_help; exit 1;;
     esac
@@ -112,15 +115,18 @@ check_dependencies() {
     fi
 }
 
-# Create organized directory structure
-create_directories
+# check save
+if [ "$no_save_mode" = false ]; then
+  # Create organized directory structure
+  create_directories
 
-# Clear output files
-true > "$output_file"
-true > "$available_file"
-true > "$taken_file"
-if [ -n "$json_file" ]; then
-    echo "[" > "$json_file"
+  # Clear output files
+  true > "$output_file"
+  true > "$available_file"
+  true > "$taken_file"
+  if [ -n "$json_file" ]; then
+      echo "[" > "$json_file"
+  fi
 fi
 
 # Enhanced domain checker with better error handling
@@ -279,15 +285,19 @@ echo -e "║ ${green}Available domains: ${yellow}$available_count${cyan}        
 echo -e "║ ${red}Taken/Error domains: ${yellow}$taken_count${cyan}                                     "
 echo -e "║ ${blue}Total time: ${yellow}${total_time_formatted}${cyan}                                      "
 echo -e "╠══════════════════════════════════════════════════════════════╣"
-echo -e "║ Results saved to:                                            "
-echo -e "║ - Main output: ${yellow}$output_file${cyan}                        "
-echo -e "║ - Available: ${yellow}$available_file${cyan}                          "
-echo -e "║ - Taken: ${yellow}$taken_file${cyan}                              "
-if [ -n "$json_file" ]; then
-echo -e "║ - JSON: ${yellow}$json_file${cyan}                                  "
-fi
-if [ "$debug_mode" = true ]; then
-echo -e "║ - Debug log: ${yellow}logs/whois_debug_$timestamp.log${cyan}                "
+if [ "$no_save_mode" = false ]; then
+  echo -e "║ Results saved to:                                            "
+  echo -e "║ - Main output: ${yellow}$output_file${cyan}                        "
+  echo -e "║ - Available: ${yellow}$available_file${cyan}                          "
+  echo -e "║ - Taken: ${yellow}$taken_file${cyan}                              "
+  if [ -n "$json_file" ]; then
+  echo -e "║ - JSON: ${yellow}$json_file${cyan}                                  "
+  fi
+  if [ "$debug_mode" = true ]; then
+  echo -e "║ - Debug log: ${yellow}logs/whois_debug_$timestamp.log${cyan}                "
+  fi
+else
+  echo -e "║ You selected no save                                            "
 fi
 echo -e "╚══════════════════════════════════════════════════════════════╝${reset}"
 
