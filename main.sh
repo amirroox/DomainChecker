@@ -23,9 +23,10 @@ yellow='\e[33m'
 blue='\e[34m'
 reset='\e[0m'
 
-# Notification sound
+# Notification / sound
 sound_file="ding.mp3"
-turn_sound=true
+turn_sound=false
+turn_notification=false
 
 # Create directories for organized output
 create_directories() {
@@ -57,7 +58,8 @@ show_help() {
     echo "  --fast                      Fast mode (no sleep)"
     echo "  --debug                     Save raw whois logs"
     echo "  --interactive               Ask before saving available domain"
-    echo "  --off-song                  Turn off notification"
+    echo "  --song                      Turn on the sound"
+    echo "  --notification              Turn on the notification"
     echo "  -h, --help                  Show this help message"
     echo ""
     echo "Files will be organized in subdirectories:"
@@ -85,7 +87,8 @@ while [[ $# -gt 0 ]]; do
         --fast) fast_mode=true; sleep_time=0; shift;;
         --debug) debug_mode=true; shift;;
         --interactive) interactive_mode=true; shift;;
-        --off-song) turn_sound=false; shift;;
+        --song) turn_sound=true; shift;;
+        --notification) turn_notification=true; shift;;
         -h|--help) show_help; exit 0;;
         *) echo -e "${red}Unknown option: $1${reset}"; show_help; exit 1;;
     esac
@@ -165,8 +168,10 @@ check_domain() {
         fi
 
         # Send notification if available
-        if command -v notify-send >/dev/null 2>&1; then
-            notify-send "✅ Available Domain" "$full_domain"
+        if [ "$turn_notification" = true ]; then
+          if command -v notify-send >/dev/null 2>&1; then
+              notify-send "✅ Available Domain" "$full_domain"
+          fi
         fi
 
         # Play sound if available
