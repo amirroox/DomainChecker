@@ -180,6 +180,14 @@ check_domain() {
               ffplay -nodisp -autoexit -loglevel quiet "$sound_file" >/dev/null 2>&1 &
           fi
         fi
+    elif echo "$whois_result" | grep -iE "No whois server" > /dev/null; then
+        echo "Error: $full_domain" >> "$output_file"
+        echo "$full_domain" >> "$taken_file"
+        echo -e "${red}[Error ✗]${reset}"
+
+        if [ -n "$json_file" ]; then
+            echo "{\"domain\": \"$full_domain\", \"status\": \"error\", \"timestamp\": \"$(date -Iseconds)\"}," >> "$json_file"
+        fi
     else
         echo "Taken: $full_domain" >> "$output_file"
         echo "$full_domain" >> "$taken_file"
@@ -268,7 +276,7 @@ echo -e "\n${cyan}╔═══════════════════�
 echo -e "║                       Final Results                          "
 echo -e "╠══════════════════════════════════════════════════════════════╣"
 echo -e "║ ${green}Available domains: ${yellow}$available_count${cyan}                                 "
-echo -e "║ ${red}Taken domains: ${yellow}$taken_count${cyan}                                     "
+echo -e "║ ${red}Taken/Error domains: ${yellow}$taken_count${cyan}                                     "
 echo -e "║ ${blue}Total time: ${yellow}${total_time_formatted}${cyan}                                      "
 echo -e "╠══════════════════════════════════════════════════════════════╣"
 echo -e "║ Results saved to:                                            "
