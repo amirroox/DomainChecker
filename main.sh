@@ -37,9 +37,9 @@ create_directories() {
     mkdir -p taken
 
     # Update file paths to use organized directories
-    output_file="results/output_$timestamp.txt"
-    available_file="available/available_$timestamp.txt"
-    taken_file="taken/taken_$timestamp.txt"
+    output_file="results/$output_file"
+    available_file="available/$available_file"
+    taken_file="taken/$taken_file"
     [ -n "$json_file" ] && json_file="results/$json_file"
 }
 
