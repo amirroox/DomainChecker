@@ -1,2 +1,6 @@
 *.txt
-./*.txt
+/results
+/logs
+/available
+/taken
+/.idea
